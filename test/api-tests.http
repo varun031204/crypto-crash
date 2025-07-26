@@ -1,0 +1,39 @@
+### Get player wallet balance
+GET http://localhost:3000/api/wallet/player1
+
+### Get crypto price
+GET http://localhost:3000/api/prices/BTC
+
+### Get game state
+GET http://localhost:3000/api/game/state
+
+### Place bet
+POST http://localhost:3000/api/bet
+Content-Type: application/json
+
+{
+  "playerId": "player1",
+  "usdAmount": 10,
+  "currency": "BTC"
+}
+
+### Cash out
+POST http://localhost:3000/api/cashout
+Content-Type: application/json
+
+{
+  "playerId": "player1"
+}
+
+### Place ETH bet
+POST http://localhost:3000/api/bet
+Content-Type: application/json
+
+{
+  "playerId": "player2",
+  "usdAmount": 25,
+  "currency": "ETH"
+}
+
+### Check another player wallet
+GET http://localhost:3000/api/wallet/player2

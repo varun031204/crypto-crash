@@ -1,0 +1,141 @@
+{
+  "info": {
+    "name": "Crypto Crash Game API",
+    "description": "API endpoints for the Crypto Crash multiplayer game",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Wallet",
+      "item": [
+        {
+          "name": "Get Player Wallet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/player1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "player1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Game",
+      "item": [
+        {
+          "name": "Get Game State",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/game/state",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "state"]
+            }
+          }
+        },
+        {
+          "name": "Place BTC Bet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playerId\": \"player1\",\n  \"usdAmount\": 10,\n  \"currency\": \"BTC\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bet",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bet"]
+            }
+          }
+        },
+        {
+          "name": "Place ETH Bet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playerId\": \"player2\",\n  \"usdAmount\": 25,\n  \"currency\": \"ETH\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bet",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bet"]
+            }
+          }
+        },
+        {
+          "name": "Cash Out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playerId\": \"player1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cashout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cashout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crypto Prices",
+      "item": [
+        {
+          "name": "Get BTC Price",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prices/BTC",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices", "BTC"]
+            }
+          }
+        },
+        {
+          "name": "Get ETH Price",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prices/ETH",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices", "ETH"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+}
