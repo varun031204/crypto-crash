@@ -402,6 +402,8 @@
 
         socket.on('roundStart', (state) => {
             updateGameState(state);
+            document.querySelector('.bet-button').disabled = false;
+            document.querySelector('.cashout-button').disabled = false;
             log('🚀 New round started!');
         });
 
@@ -409,14 +411,16 @@
             currentMultiplier = data.multiplier;
             document.getElementById('multiplier').textContent = data.multiplier.toFixed(2) + 'x';
             
-            // Add visual effects based on multiplier
             const multiplierEl = document.getElementById('multiplierDisplay');
-            if (data.multiplier > 2) {
-                multiplierEl.style.color = '#ffaa00';
+            multiplierEl.className = 'multiplier-display multiplier-active';
+            if (data.multiplier > 10) {
+                multiplierEl.style.color = '#ff0000';
             } else if (data.multiplier > 5) {
                 multiplierEl.style.color = '#ff6600';
-            } else if (data.multiplier > 10) {
-                multiplierEl.style.color = '#ff0000';
+            } else if (data.multiplier > 2) {
+                multiplierEl.style.color = '#ffaa00';
+            } else {
+                multiplierEl.style.color = '';
             }
         });
 
@@ -433,7 +437,7 @@
         socket.on('cashoutSuccess', (data) => {
             log(`✅ Cashout successful! Payout: ${data.payout.toFixed(8)} crypto ($${data.usdValue.toFixed(2)}) at ${data.multiplier.toFixed(2)}x`);
             log(`🔗 Transaction: ${data.transactionHash}`);
-            // Refresh wallet after cashout
+            document.querySelector('.cashout-button').disabled = true;
             setTimeout(getWallet, 500);
         });
 
@@ -452,6 +456,7 @@
             
             // Update multiplier styling based on status
             multiplierEl.className = 'multiplier-display';
+            multiplierEl.style.color = '';
             if (state.status === 'active') {
                 multiplierEl.classList.add('multiplier-active');
             } else if (state.status === 'crashed') {
@@ -570,12 +575,8 @@
         
         // Enter key support for betting
         document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                if (gameStatus === 'waiting') {
-                    placeBet();
-                } else if (gameStatus === 'active') {
-                    cashOut();
-                }
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                if (gameStatus === 'waiting') placeBet();
             }
         });
         

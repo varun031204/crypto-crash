@@ -16,7 +16,8 @@ class GameService {
   generateCrashPoint(seed, roundId) {
     const hash = crypto.createHash('sha256').update(seed + roundId).digest('hex');
     const hashInt = parseInt(hash.substring(0, 8), 16);
-    const crashPoint = Math.max(1.01, (hashInt % (process.env.MAX_CRASH_MULTIPLIER * 100)) / 100);
+    const maxCrash = parseFloat(process.env.MAX_CRASH_MULTIPLIER) || 10;
+    const crashPoint = Math.max(1.01, (hashInt % (maxCrash * 100)) / 100);
     return Math.round(crashPoint * 100) / 100;
   }
 
@@ -28,27 +29,32 @@ class GameService {
     return crypto.createHash('sha256').update(seed).digest('hex');
   }
 
-  async startNewRound() {
+  async prepareRound() {
+    if (this.currentRound) return;
     const seed = this.generateSeed();
     const roundId = Date.now().toString();
     const hash = this.generateHash(seed);
     const crashPoint = this.generateCrashPoint(seed, roundId);
 
     this.currentRound = new GameRound({
-      roundId,
-      seed,
-      hash,
-      crashPoint,
+      roundId, seed, hash, crashPoint,
       startTime: new Date(),
-      status: 'active'
+      status: 'waiting'
     });
-
     await this.currentRound.save();
-    
+    this.crashPoint = crashPoint;
+  }
+
+  async startNewRound() {
+    if (this.gameState === 'active') return;
+    await this.prepareRound();
+
+    this.currentRound.status = 'active';
+    await this.currentRound.save();
+
     this.gameState = 'active';
     this.multiplier = 1;
     this.startTime = Date.now();
-    this.crashPoint = crashPoint;
 
     return this.currentRound;
   }
@@ -91,7 +97,7 @@ class GameService {
     };
 
     if (!this.currentRound) {
-      await this.startNewRound();
+      await this.prepareRound();
     }
 
     this.currentRound.bets.push(bet);
@@ -159,18 +165,16 @@ class GameService {
   }
 
   async endRound() {
-    if (this.gameState !== 'active') return;
+    if (this.gameState !== 'active' || this.isEnding) return;
+    this.isEnding = true;
 
     this.gameState = 'crashed';
     this.currentRound.status = 'crashed';
     this.currentRound.endTime = new Date();
     await this.currentRound.save();
 
-    // Reset for next round
-    setTimeout(() => {
-      this.gameState = 'waiting';
-      this.currentRound = null;
-    }, 3000);
+    this.currentRound = null;
+    this.isEnding = false;
 
     return this.currentRound;
   }

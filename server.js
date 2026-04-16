@@ -19,7 +19,7 @@ const io = socketIo(server, {
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('test'));
+app.use(express.static(require('path').join(__dirname, 'test')));
 app.use('/api', apiRoutes);
 
 // MongoDB connection
@@ -56,44 +56,50 @@ io.on('connection', (socket) => {
 });
 
 // Game loop
-let gameInterval;
+async function runGameLoop() {
+  while (true) {
+    // Waiting phase - 10 seconds for bets
+    gameService.gameState = 'waiting';
+    await gameService.prepareRound();
+    io.emit('gameState', gameService.getGameState());
+    await sleep(10000);
 
-function startGameLoop() {
-  gameInterval = setInterval(async () => {
-    const state = gameService.getGameState();
-    
-    if (state.status === 'waiting') {
-      // Start new round every 10 seconds
-      await gameService.startNewRound();
-      io.emit('roundStart', gameService.getGameState());
-      
-      // Start multiplier updates
+    // Active phase - start round
+    await gameService.startNewRound();
+    io.emit('roundStart', gameService.getGameState());
+
+    // Multiplier updates until crash
+    await new Promise((resolve) => {
       const multiplierInterval = setInterval(() => {
-        const currentState = gameService.getGameState();
         const multiplier = gameService.getCurrentMultiplier();
-        
-        if (multiplier >= currentState.crashPoint) {
+        const crashPoint = gameService.crashPoint;
+
+        if (multiplier >= crashPoint) {
           clearInterval(multiplierInterval);
           gameService.endRound().then(() => {
-            io.emit('roundCrash', {
-              crashPoint: currentState.crashPoint,
-              finalMultiplier: multiplier
-            });
+            io.emit('roundCrash', { crashPoint, finalMultiplier: multiplier });
+            resolve();
           });
         } else {
           io.emit('multiplierUpdate', { multiplier });
         }
-      }, process.env.MULTIPLIER_UPDATE_INTERVAL || 100);
-      
-    }
-  }, process.env.GAME_ROUND_DURATION || 10000);
+      }, 100);
+    });
+
+    // Cooldown before next round
+    await sleep(3000);
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  startGameLoop();
+  runGameLoop();
 });
 
 module.exports = { app, server, io };
